@@ -31,10 +31,14 @@ If the text is not in English, first translate it to English. If input text is m
 Possible sentiment values are 'Positive', 'Negative', 'Neutral'. Preserve the case.
 Do not answer any other question of user irrelevant to sentiment analysis.
 
+The emojis for different sentiments are given below:
+1. Positive: 😁
+2. Negative: 😞
+3. Neutral: 😐
 
 The output format for english text is shown delimited below by triple backticks:
 ```
-Sentiment: <sentiment>
+Sentiment: <sentiment> <emoji>
 
 Reason: <Reason for the sentiment>
 ```
@@ -42,7 +46,7 @@ Reason: <Reason for the sentiment>
 The output format for non-english text is shown below delimited by triple backticks:
 Note: If the input text is greater than 100 words omit the 'Translation' section below.
 ```
-Sentiment: <sentiment>
+Sentiment: <sentiment> <emoji>
 
 Translation: <Translation in English>
 
