@@ -2,7 +2,7 @@ from openai import OpenAI, OpenAIError
 import streamlit as st
 
 # Set streamlit page configuration
-st.set_page_config(page_title="Sentiment Analyzer", page_icon="💬")
+st.set_page_config(page_title="Sentiment Insights", page_icon="💬")
 
 # Get the OpenAI API Key from the user
 openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
