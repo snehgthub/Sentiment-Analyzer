@@ -1,2 +1,2 @@
-# Sentiment-Analyzer
-A sentiment analysis tool using LLM
+# 🌏💬Multi-Language Sentiment Analyzer
+A sentiment analysis tool built using LLM which supports multiple languages.
