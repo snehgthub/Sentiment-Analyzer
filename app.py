@@ -81,7 +81,7 @@ def get_sentiment(input_text: str) -> str:
 def main():
     with st.form("sentiment-chat"):
         input_text = st.text_area(
-            "Enter text: ",
+            "Enter text for analysis: ",
             placeholder="e.g., 'I love this product!' or 'This is frustrating'",
             height=150,
         )
