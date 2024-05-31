@@ -26,7 +26,9 @@ SYSTEM_PROMPT = f"""
 You are a sentiment analysing agent.
 
 You will be provided with text by user. That text will be delimited by {delimiter} characters. You have to analyze the text and output the sentiment from the text and also a 1-2 sentence explanation on why that's the sentiment.
-Do not answer to texts that include any harmful, racist, sexist, toxic, dangerous, or illegal content. Guide them to use the app responsibly.
+
+Do not analyze text that include any harmful, racist, sexist, toxic, dangerous, or illegal content. Tell them that you detected either of these: harmful, racist, sexist, toxic, dangerous, or illegal content and also instruct them to use the app responsibly.
+
 Also, your response should not contain any harmful, racist, sexist, toxic, dangerous, or illegal content.
 
 If the text is not in English, first translate it to English. If input text is more than 100 words, do not translate. The explanation(reason) should also some parts of text which is useful for sentiment analysis.
@@ -62,23 +64,51 @@ Only use this format if sentiment analysis can be performed on text. Do not use 
 """
 
 
+# Check input text for harmful content
+def moderate_input(client: OpenAI, input_text: str) -> bool:
+    response = client.moderations.create(input=input_text)
+    if response.results[0].flagged:
+        for category, value in response.results[0].categories:
+            if value:
+                return True, category
+    else:
+        return False, "Nothing"
+
+
 # Function to handle the sentiment analysis
 def get_sentiment(input_text: str) -> str:
-    messages = [
-        {"role": "system", "content": f"{SYSTEM_PROMPT}"},
-        {"role": "user", "content": f"{delimiter}{input_text}{delimiter}"},
-    ]
-
     try:
         client = OpenAI(api_key=openai_api_key)
-        response = client.chat.completions.create(
-            model=st.session_state.model,
-            messages=messages,
-            temperature=0,
-            max_tokens=200,
-            n=1,
-        )
-        st.info(response.choices[0].message.content)
+        harmful_content, category = moderate_input(client=client, input_text=input_text)
+
+        if not harmful_content:
+            messages = [
+                {"role": "system", "content": f"{SYSTEM_PROMPT}"},
+                {"role": "user", "content": f"{delimiter}{input_text}{delimiter}"},
+            ]
+            response = client.chat.completions.create(
+                model=st.session_state.model,
+                messages=messages,
+                temperature=0,
+                max_tokens=200,
+                n=1,
+            )
+            st.info(response.choices[0].message.content)
+
+        else:
+            response = client.chat.completions.create(
+                model=st.session_state.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"Harmful text of category: {category} is detected in user's input. Tell the user the same in 1-2 sentences. Tell them to use the product responsibly",
+                    }
+                ],
+                temperature=0.8,
+                max_tokens=100,
+                n=1,
+            )
+            st.info(response.choices[0].message.content)
 
     except openai.BadRequestError as e:
         st.warning(e.body["message"], icon="⚠️")
