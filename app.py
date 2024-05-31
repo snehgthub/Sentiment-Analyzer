@@ -1,4 +1,5 @@
-from openai import OpenAI, OpenAIError
+import openai
+from openai import OpenAI
 import streamlit as st
 
 # Set streamlit page configuration
@@ -8,7 +9,7 @@ st.set_page_config(page_title="Sentiment Insights", page_icon="💬")
 openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
 # Set the page title and caption
-st.title("🌏💬Multi-Language Sentiment Analyzer")
+st.title("🌏💬 Multi-Language Sentiment Analyzer")
 st.caption(
     "Analyze and Understand Emotions in Your Language: Positive 😁, Negative 😞, Neutral 😐"
 )
@@ -17,12 +18,14 @@ st.caption(
 if "openai_model" not in st.session_state:
     st.session_state.model = "gpt-3.5-turbo"
 
+# Setting the delimiter for input text:
+delimiter = "####"
 
 # System prompt for the LLM
 SYSTEM_PROMPT = f"""
 You are a sentiment analysing agent.
 
-You will be provided with text by user. You have to analyze the text and output the sentiment from the text and also a 1-2 sentence explanation on why that's the sentiment.
+You will be provided with text by user. That text will be delimited by {delimiter} characters. You have to analyze the text and output the sentiment from the text and also a 1-2 sentence explanation on why that's the sentiment.
 Do not answer to texts that include any harmful, racist, sexist, toxic, dangerous, or illegal content. Guide them to use the app responsibly.
 Also, your response should not contain any harmful, racist, sexist, toxic, dangerous, or illegal content.
 
@@ -63,7 +66,7 @@ Only use this format if sentiment analysis can be performed on text. Do not use 
 def get_sentiment(input_text: str) -> str:
     messages = [
         {"role": "system", "content": f"{SYSTEM_PROMPT}"},
-        {"role": "user", "content": f"{input_text}"},
+        {"role": "user", "content": f"{delimiter}{input_text}{delimiter}"},
     ]
 
     try:
@@ -75,10 +78,31 @@ def get_sentiment(input_text: str) -> str:
             max_tokens=200,
             n=1,
         )
-        return response.choices[0].message.content
+        st.info(response.choices[0].message.content)
 
-    except OpenAIError as e:
-        return f"Error: {str(e)}"
+    except openai.BadRequestError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.AuthenticationError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.PermissionDeniedError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.NotFoundError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.UnprocessableEntityError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.RateLimitError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.InternalServerError as e:
+        st.warning(e.body["message"], icon="⚠️")
+
+    except openai.APIConnectionError as e:
+        st.warning(e.body["message"], icon="⚠️")
 
 
 # Starting point of the program
@@ -96,8 +120,7 @@ def main():
 
         if openai_api_key.startswith("sk-") and submitted:
             with st.spinner("Analysing..."):
-                sentiment_result = get_sentiment(input_text)
-                st.info(sentiment_result)
+                get_sentiment(input_text)
 
 
 if __name__ == "__main__":
