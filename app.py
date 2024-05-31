@@ -79,6 +79,11 @@ def moderate_input(client: OpenAI, input_text: str) -> bool:
 def get_sentiment(input_text: str) -> str:
     try:
         client = OpenAI(api_key=openai_api_key)
+
+        # Remove delimiter in input text to prevent prompt injection
+        input_text = input_text.replace(delimiter, "")
+
+        # Detect harmful content and category of the content e.g., hate, harrasment, etc.
         harmful_content, category = moderate_input(client=client, input_text=input_text)
 
         if not harmful_content:
